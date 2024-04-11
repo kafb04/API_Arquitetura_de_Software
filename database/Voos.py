@@ -11,8 +11,6 @@ class Voos:
         if connection is None:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Não foi possível conectar ao banco de dados")
         cursor = connection.cursor()
-
-        cursor = connection.cursor()
         try:
             cursor.execute("""
                 SELECT v.rota_id, v.codigo_voo, r.aeroporto_origem, r.aeroporto_destino, v.data, v.horario, v.tarifa
@@ -57,7 +55,6 @@ class Voos:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Não foi possível conectar ao banco de dados")
         cursor = connection.cursor()
 
-        cursor = connection.cursor()
         try:
             cursor.execute("""
                 SELECT v.rota_id, v.codigo_voo, r.aeroporto_origem, r.aeroporto_destino, v.data, v.horario, v.tarifa

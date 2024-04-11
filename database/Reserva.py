@@ -14,7 +14,6 @@ class Reserva:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Não foi possível conectar ao banco de dados")
         cursor = connection.cursor()
 
-        cursor = connection.cursor()
         try:
             cursor.execute("SELECT id, tarifa FROM voos WHERE codigo_voo = %s", (codigo_voo,))
             id_voo, tarifa = cursor.fetchone()
