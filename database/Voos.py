@@ -1,14 +1,16 @@
 import psycopg2
-from datetime import datetime
+from fastapi import HTTPException, status
 
 class Voos:
     def __init__(self, conexao):
         self.conexao = conexao
 
+    # metodo para obter voos
     def obter_voos(self, data):
         connection = self.conexao.conectar()
         if connection is None:
-            return None
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Não foi possível conectar ao banco de dados")
+        cursor = connection.cursor()
 
         cursor = connection.cursor()
         try:
@@ -20,11 +22,12 @@ class Voos:
             """, (data,))
             voos = cursor.fetchall()
 
-            if not voos:
+            if not voos: # se nao retornou nenhum dado
                 return "Nenhum voo encontrado para a data informada"
             
             else:
-                voos_formatados = []
+                # formatando voos para mostrar a chave
+                voos_formatados = [] 
                 for voo in voos:
                     voo_formatado = {
                         "rota_id": voo[0],
@@ -41,15 +44,18 @@ class Voos:
             
         except psycopg2.Error as e:
             print("Erro ao obter voos:", e)
-            return None
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Ocorreu um erro ao processar a solicitação")
+        
         finally:
             cursor.close()
             connection.close()
 
+    # metodo para pesquisar voos por data e numero de passageiros
     def pesquisar_voos(self, data, numero_passageiros):
         connection = self.conexao.conectar()
         if connection is None:
-            return None
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Não foi possível conectar ao banco de dados")
+        cursor = connection.cursor()
 
         cursor = connection.cursor()
         try:
@@ -66,6 +72,7 @@ class Voos:
                 return "Nenhum voo encontrado para a data informada"
             
             else:
+                # formatando voos para mostrar a chave
                 voos_formatados = []
                 for voo in voos:
                     tarifa = voo[6]
@@ -86,7 +93,7 @@ class Voos:
             
         except psycopg2.Error as e:
             print("Erro ao pesquisar voos:", e)
-            return None
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Ocorreu um erro ao processar a solicitação")
         finally:
             cursor.close()
             connection.close()
