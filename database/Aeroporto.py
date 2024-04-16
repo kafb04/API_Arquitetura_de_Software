@@ -86,5 +86,3 @@ class Aeroporto:
         finally:
             cursor.close()
             connection.close()
-
-
