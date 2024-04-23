@@ -1,44 +1,33 @@
 #!/usr/bin/env python
 import pika
 import json
-import psycopg2
-
-def registrar_novo_usuario(msg):
-    print("Registering new user")
-    data = json.loads(msg.decode('utf-8'))
-    print(data)
-
-    # Código para registrar o novo usuário no sistema de autenticação
-    try:
-        connection = psycopg2.connect(
-            host='localhost',
-            user='seu_usuario',
-            password='sua_senha',
-            database='seu_banco_de_dados'
-        )
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO usuarios (email, senha) VALUES (%s, %s)", (data['email'], data['senha']))
-        connection.commit()
-        print("New user registered successfully")
-    except psycopg2.Error as e:
-        print("Error registering new user:", e)
-    finally:
-        if connection:
-            connection.close()
+import hashlib
 
 def main():
-    credentials = pika.PlainCredentials('guest', 'guest')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue='novo_usuario')
+    credenciais = pika.PlainCredentials('guest', 'guest')
+    parametros = pika.ConnectionParameters('localhost',
+                                       5672,
+                                       '/',
+                                       credenciais)
+
+    conexao = pika.BlockingConnection(parametros)
+    canal = conexao.channel()
+
+    canal.queue_declare(queue='cadastro_usuario')
 
     def callback(ch, method, properties, body):
-        registrar_novo_usuario(body)
+        dados_usuario = json.loads(body.decode('utf-8'))
+        hash_usuario = hashlib.sha256(json.dumps(dados_usuario).encode()).hexdigest()
+        if hash_usuario == dados_usuario['hash']:
+            print(" [x] Mensagem de cadastro de usuário recebida:", body)
+        else:
+            print(" [x] Mensagem de cadastro de usuário recebida com hash inválido.")
 
-    channel.basic_consume(queue='novo_usuario', on_message_callback=callback, auto_ack=True)
-    print(' [*] Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+    canal.basic_consume(queue='cadastro_usuario',
+                          on_message_callback=callback, auto_ack=True)
+
+    print(' [*] Aguardando mensagens de cadastro de usuário. Para sair, pressione CTRL+C')
+    canal.start_consuming()
 
 if __name__ == '__main__':
     main()

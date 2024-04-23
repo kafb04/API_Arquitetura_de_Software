@@ -2,39 +2,47 @@
 import pika
 import json
 import time
-from fpdf import FPDF
-import psycopg2
+import hashlib
 
-def processar_compra_passagem(msg):
-    print("Processing purchase of airplane tickets")
-    data = json.loads(msg.decode('utf-8'))
-    print(data)
+def processar_cadastro_usuario(msg):
+    print("Processamento de Cadastro de Usuário")
+    print("[x] Dados de cadastro de usuário recebidos:", msg)
+    dados_usuario = json.loads(msg.decode('utf-8'))
+    print("ID do Usuário: {0}".format(dados_usuario['id']))
+    print("Nome do Usuário: {0}".format(dados_usuario['nome']))
+    print("E-mail do Usuário: {0}".format(dados_usuario['email']))
 
-    # Processar os dados e gerar o PDF
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Compra de Passagem Aérea", ln=1, align="C")
-    pdf.cell(200, 20, txt=f"Código do Voo: {data['codigo_voo']}", ln=2, align="C")
-    pdf.cell(200, 30, txt=f"Quantidade de Passageiros: {data['qtd_passageiros']}", ln=3, align="C")
-    pdf.output("/path/to/pdf/file.pdf")
+    # Verifica o hash
+    hash_usuario = hashlib.sha256(json.dumps(dados_usuario).encode()).hexdigest()
+    if hash_usuario == dados_usuario['hash']:
+        print("Hash verificado: válido")
+    else:
+        print("Hash verificado: inválido")
 
-    time.sleep(5)
-    print("Purchase processing finished")
+    # Aqui você pode adicionar a lógica para salvar os dados do usuário no banco de dados, enviar e-mails, etc.
+    time.sleep(2)  # Simula algum processamento
+    print("Processamento de Cadastro de Usuário Finalizado\n")
 
 def main():
-    credentials = pika.PlainCredentials('guest', 'guest')
-    parameters = pika.ConnectionParameters('localhost', 5672, '/', credentials)
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-    channel.queue_declare(queue='compra_passagem')
+    credenciais = pika.PlainCredentials('guest', 'guest')
+    parametros = pika.ConnectionParameters('localhost',
+                                       5672,
+                                       '/',
+                                       credenciais)
+
+    conexao = pika.BlockingConnection(parametros)
+    canal = conexao.channel()
+
+    canal.queue_declare(queue='cadastro_usuario')
 
     def callback(ch, method, properties, body):
-        processar_compra_passagem(body)
+        processar_cadastro_usuario(body)
 
-    channel.basic_consume(queue='compra_passagem', on_message_callback=callback, auto_ack=True)
-    print(' [*] Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+    canal.basic_consume(queue='cadastro_usuario',
+                          on_message_callback=callback, auto_ack=True)
+
+    print(' [*] Aguardando mensagens de cadastro de usuário. Para sair, pressione CTRL+C')
+    canal.start_consuming()
 
 if __name__ == '__main__':
     main()
