@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asa-tf
+  labels:
+    app: asa-tf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asa-tf-pods
+  template:
+    metadata:
+      labels:
+        app: asa-tf-pods
+    spec:
+      containers:
+      - name: asa-tf-container
+        image: asa_tf
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000

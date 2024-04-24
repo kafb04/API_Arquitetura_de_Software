@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: asa-tf-app
+  name: asa-tf-svc
+spec:
+  ports:
+  - nodePort: 30000
+    port: 8888
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: asa-tf-pods
+  type: NodePort
+
+
